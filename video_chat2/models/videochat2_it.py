@@ -158,13 +158,13 @@ class VideoChat2_it(Blip2Base):
 
         # load weights of VideoChat2
         if videochat2_model_path:
-            logger.info(f"Load VideoChat2 from: {videochat2_model_path}")
+            print(f"Load VideoChat2 from: {videochat2_model_path}")
             ckpt = torch.load(videochat2_model_path, map_location="cpu")
             if 'model' in ckpt.keys():
                 msg = self.load_state_dict(ckpt['model'], strict=False)
             else:
                 msg = self.load_state_dict(ckpt, strict=False)
-            logger.info(msg)
+            print(msg)
 
     def vit_to_cpu(self):
         self.vision_layernorm.to("cpu")
