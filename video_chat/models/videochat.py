@@ -83,63 +83,65 @@ class VideoChat(Blip2Base):
                 self.ln_vision.train = disabled_train
         print('Loading VIT Done')
 
-        print('Loading Q-Former')
-        self.Qformer, self.query_tokens = self.init_Qformer(
-            num_query_token, self.visual_encoder.num_features,
-        )
-        self.Qformer.cls = None
-        self.Qformer.bert.embeddings.word_embeddings = None
-        self.Qformer.bert.embeddings.position_embeddings = None
-        for layer in self.Qformer.bert.encoder.layer:
-            layer.output = None
-            layer.intermediate = None
-        self.load_from_pretrained(model_path=q_former_model_path)
-        print(f"Add extra {extra_num_query_token} tokens in QFormer")
-        self.extra_query_tokens = nn.Parameter(
-            torch.zeros(1, extra_num_query_token, self.query_tokens.shape[-1])
-        )
+        print("Skipping loading Q-Former and LLAMA...")
 
-        if freeze_qformer:
-            print("freeze Qformer")
-            for name, param in self.Qformer.named_parameters():
-                param.requires_grad = False
-            self.Qformer = self.Qformer.eval()
-            self.Qformer.train = disabled_train
-            self.query_tokens.requires_grad = False
-        print('Loading Q-Former Done')
+        # print('Loading Q-Former')
+        # self.Qformer, self.query_tokens = self.init_Qformer(
+        #     num_query_token, self.visual_encoder.num_features,
+        # )
+        # self.Qformer.cls = None
+        # self.Qformer.bert.embeddings.word_embeddings = None
+        # self.Qformer.bert.embeddings.position_embeddings = None
+        # for layer in self.Qformer.bert.encoder.layer:
+        #     layer.output = None
+        #     layer.intermediate = None
+        # self.load_from_pretrained(model_path=q_former_model_path)
+        # print(f"Add extra {extra_num_query_token} tokens in QFormer")
+        # self.extra_query_tokens = nn.Parameter(
+        #     torch.zeros(1, extra_num_query_token, self.query_tokens.shape[-1])
+        # )
 
-        print('Loading LLAMA')
-        self.llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
-        self.llama_tokenizer.pad_token = self.llama_tokenizer.eos_token
+        # if freeze_qformer:
+        #     print("freeze Qformer")
+        #     for name, param in self.Qformer.named_parameters():
+        #         param.requires_grad = False
+        #     self.Qformer = self.Qformer.eval()
+        #     self.Qformer.train = disabled_train
+        #     self.query_tokens.requires_grad = False
+        # print('Loading Q-Former Done')
 
-        if self.low_resource:
-            self.llama_model = LlamaForCausalLM.from_pretrained(
-                llama_model_path,
-                torch_dtype=torch.float16,
-                load_in_8bit=True,
-                device_map="auto"
-            )
-        else:
-            self.llama_model = LlamaForCausalLM.from_pretrained(
-                llama_model_path,
-                torch_dtype=torch.float16,
-            )
+        # print('Loading LLAMA')
+        # self.llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
+        # self.llama_tokenizer.pad_token = self.llama_tokenizer.eos_token
 
-        print("freeze LLAMA")
-        for name, param in self.llama_model.named_parameters():
-            param.requires_grad = False
-        print('Loading LLAMA Done')
+        # if self.low_resource:
+        #     self.llama_model = LlamaForCausalLM.from_pretrained(
+        #         llama_model_path,
+        #         torch_dtype=torch.float16,
+        #         load_in_8bit=True,
+        #         device_map="auto"
+        #     )
+        # else:
+        #     self.llama_model = LlamaForCausalLM.from_pretrained(
+        #         llama_model_path,
+        #         torch_dtype=torch.float16,
+        #     )
 
-        self.llama_proj = nn.Linear(
-            self.Qformer.config.hidden_size, self.llama_model.config.hidden_size
-        )
-        self.max_txt_len = max_txt_len
+        # print("freeze LLAMA")
+        # for name, param in self.llama_model.named_parameters():
+        #     param.requires_grad = False
+        # print('Loading LLAMA Done')
+
+        # self.llama_proj = nn.Linear(
+        #     self.Qformer.config.hidden_size, self.llama_model.config.hidden_size
+        # )
+        # self.max_txt_len = max_txt_len
 
         # load weights of VideoChat
         if videochat_model_path:
             print(f"Load VideoChat from: {videochat_model_path}")
             ckpt = torch.load(videochat_model_path, map_location="cpu")
-            msg = self.load_state_dict(ckpt['model'], strict=False)
+            msg = self.load_state_dict(ckpt, strict=False)
             print(msg)
 
     def vit_to_cpu(self):
