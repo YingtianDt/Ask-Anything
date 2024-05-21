@@ -1,4 +1,4 @@
-from configs.instruction_data import *
+from video_chat2.configs.instruction_data import *
 
 # ========================= data ==========================
 train_corpus = "videochat2_instruction"

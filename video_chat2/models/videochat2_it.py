@@ -105,55 +105,56 @@ class VideoChat2_it(Blip2Base):
 
         logger.info('Loading LLAMA')
         # problem: do we need to set truncation_side="left"?
-        self.llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
-        self.llama_tokenizer.pad_token = self.llama_tokenizer.eos_token
+        print("Skipping language model loading...")
+        # self.llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
+        # self.llama_tokenizer.pad_token = self.llama_tokenizer.eos_token
 
-        if use_flash_attention:
-            logger.info("Use flash attention")
-            from .blip2.modeling_llama_mem import LlamaForCausalLM
-        else:
-            from .blip2.modeling_llama import LlamaForCausalLM
-        if debug:
-            logger.info("Debug mode, build small LLAMA")
-            llama_config = LlamaConfig.from_pretrained(llama_model_path)
-            llama_config.hidden_size = 512
-            llama_config.intermediate_size = 2048
-            llama_config.num_attention_heads = 8
-            llama_config.num_hidden_layers = 12
-            llama_config.torch_dtype = torch.float16
-            self.llama_model = LlamaForCausalLM(llama_config)
-        else:
-            if self.low_resource:
-                self.llama_model = LlamaForCausalLM.from_pretrained(
-                    llama_model_path,
-                    torch_dtype=torch.float16,
-                    load_in_8bit=True,
-                    device_map="auto",
-                )
-            else:
-                self.llama_model = LlamaForCausalLM.from_pretrained(
-                    llama_model_path,
-                    torch_dtype=torch.float16,
-                )
+        # if use_flash_attention:
+        #     logger.info("Use flash attention")
+        #     from .blip2.modeling_llama_mem import LlamaForCausalLM
+        # else:
+        #     from .blip2.modeling_llama import LlamaForCausalLM
+        # if debug:
+        #     logger.info("Debug mode, build small LLAMA")
+        #     llama_config = LlamaConfig.from_pretrained(llama_model_path)
+        #     llama_config.hidden_size = 512
+        #     llama_config.intermediate_size = 2048
+        #     llama_config.num_attention_heads = 8
+        #     llama_config.num_hidden_layers = 12
+        #     llama_config.torch_dtype = torch.float16
+        #     self.llama_model = LlamaForCausalLM(llama_config)
+        # else:
+        #     if self.low_resource:
+        #         self.llama_model = LlamaForCausalLM.from_pretrained(
+        #             llama_model_path,
+        #             torch_dtype=torch.float16,
+        #             load_in_8bit=True,
+        #             device_map="auto",
+        #         )
+        #     else:
+        #         self.llama_model = LlamaForCausalLM.from_pretrained(
+        #             llama_model_path,
+        #             torch_dtype=torch.float16,
+        #         )
 
-        logger.info("freeze LLAMA")
-        for name, param in self.llama_model.named_parameters():
-            param.requires_grad = False
-        logger.info('Loading LLAMA Done')
+        # logger.info("freeze LLAMA")
+        # for name, param in self.llama_model.named_parameters():
+        #     param.requires_grad = False
+        # logger.info('Loading LLAMA Done')
 
-        if self.use_lora:
-            logger.info("Use lora")
-            peft_config = LoraConfig(
-                task_type=TaskType.CAUSAL_LM, inference_mode=False, 
-                r=lora_r, lora_alpha=lora_alpha, lora_dropout=lora_dropout
-            )
-            self.llama_model = get_peft_model(self.llama_model, peft_config)
-            self.llama_model.print_trainable_parameters()
+        # if self.use_lora:
+        #     logger.info("Use lora")
+        #     peft_config = LoraConfig(
+        #         task_type=TaskType.CAUSAL_LM, inference_mode=False, 
+        #         r=lora_r, lora_alpha=lora_alpha, lora_dropout=lora_dropout
+        #     )
+        #     self.llama_model = get_peft_model(self.llama_model, peft_config)
+        #     self.llama_model.print_trainable_parameters()
 
-        self.llama_proj = nn.Linear(
-            self.qformer.config.hidden_size, self.llama_model.config.hidden_size
-        )
-        self.max_txt_len = max_txt_len
+        # self.llama_proj = nn.Linear(
+        #     self.qformer.config.hidden_size, self.llama_model.config.hidden_size
+        # )
+        # self.max_txt_len = max_txt_len
 
         # load weights of VideoChat2
         if videochat2_model_path:
